@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Response struct {
@@ -11,46 +12,77 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
-func ping(w http.ResponseWriter, r *http.Request) {
+func JsonResponse(w http.ResponseWriter, response Response) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func onlyGet(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	if !onlyGet(w, r) {
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(Response{Message: "pong"})
+	response := Response{Message: "pong"}
+	JsonResponse(w, r, response)
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	if !onlyGet(w, r) {
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(Response{Status: "ok"})
+	response := Response{Status: "ok"}
+	JsonResponse(w, r, response)
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
+	if !onlyGet(w, r) {
 		return
 	}
 
 	name := r.URL.Query().Get("name")
-	fmt.Println(name)
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	message := "Hello " + name + "!"
-	json.NewEncoder(w).Encode(Response{Message: message})
+	response := Response{Message: message}
+	JsonResponse(w, r, response)
+}
+
+func usersHandler(w http.ResponseWriter, r *http.Request) {
+	if !onlyGet(w, r) {
+		return
+	}
+
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) < 3 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	name := parts[2]
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	message := "User " + name
+	response := Response{Message: message}
+	JsonResponse(w, r, response)
 }
 
 func main() {
 	http.HandleFunc("/ping", ping)
 	http.HandleFunc("/health", health)
 	http.HandleFunc("/hello", hello)
+	http.HandleFunc("/users/", usersHandler)
 
 	fmt.Println("Server running on :8080")
 	http.ListenAndServe(":8080", nil)
