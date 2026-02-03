@@ -30,7 +30,7 @@ func ping(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response := Response{Message: "pong"}
-	JsonResponse(w, r, response)
+	JsonResponse(w, response)
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +38,7 @@ func health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response := Response{Status: "ok"}
-	JsonResponse(w, r, response)
+	JsonResponse(w, response)
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +54,7 @@ func hello(w http.ResponseWriter, r *http.Request) {
 
 	message := "Hello " + name + "!"
 	response := Response{Message: message}
-	JsonResponse(w, r, response)
+	JsonResponse(w, response)
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
@@ -75,7 +75,7 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	message := "User " + name
 	response := Response{Message: message}
-	JsonResponse(w, r, response)
+	JsonResponse(w, response)
 }
 
 func main() {
