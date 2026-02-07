@@ -12,40 +12,50 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
+func onlyGetMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Middleware start")
+
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		fmt.Println("Middleware before next")
+		next.ServeHTTP(w, r)
+		fmt.Println("Middleware after next")
+	})
+}
+
+func logPathMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func logAppName(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-App-Name", "go-http-playground")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func JsonResponse(w http.ResponseWriter, response Response) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-func onlyGet(w http.ResponseWriter, r *http.Request) bool {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return false
-	}
-	return true
-}
-
 func ping(w http.ResponseWriter, r *http.Request) {
-	if !onlyGet(w, r) {
-		return
-	}
 	response := Response{Message: "pong"}
 	JsonResponse(w, response)
 }
 
 func health(w http.ResponseWriter, r *http.Request) {
-	if !onlyGet(w, r) {
-		return
-	}
 	response := Response{Status: "ok"}
 	JsonResponse(w, response)
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
-	if !onlyGet(w, r) {
-		return
-	}
-
 	name := r.URL.Query().Get("name")
 	if name == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -58,10 +68,6 @@ func hello(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	if !onlyGet(w, r) {
-		return
-	}
-
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) < 3 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -79,10 +85,10 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/ping", ping)
-	http.HandleFunc("/health", health)
-	http.HandleFunc("/hello", hello)
-	http.HandleFunc("/users/", usersHandler)
+	http.Handle("/ping", logAppName(onlyGetMiddleware(logPathMiddleware(http.HandlerFunc(ping)))))
+	http.Handle("/health", onlyGetMiddleware(http.HandlerFunc(health)))
+	http.Handle("/hello", onlyGetMiddleware(http.HandlerFunc(hello)))
+	http.Handle("/users/", onlyGetMiddleware(http.HandlerFunc(usersHandler)))
 
 	fmt.Println("Server running on :8080")
 	http.ListenAndServe(":8080", nil)

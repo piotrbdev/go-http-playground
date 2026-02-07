@@ -29,6 +29,7 @@ func main() {
 	})
 
 	private.POST("/users", handlers.CreateUser)
+	private.GET("/users", handlers.GetUsers)
 
 	r.GET("/health", handlers.HealthCheck)
 	r.GET("/users/:name", handlers.GetUser)

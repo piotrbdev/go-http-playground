@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"gin-app/models"
+	"gin-app/storage"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,5 +25,11 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, models.Response{Message: err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, models.Response{Message: "user " + req.Name + " created"})
+	user := storage.AddUser(req.Name, req.Email)
+	c.JSON(http.StatusCreated, user)
+}
+
+func GetUsers(c *gin.Context) {
+	users := storage.GetUsers()
+	c.JSON(http.StatusOK, users)
 }
