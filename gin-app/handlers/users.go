@@ -23,7 +23,7 @@ func GetUser(c *gin.Context) {
 func CreateUser(c *gin.Context) {
 	var req models.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.Response{Message: err.Error()})
+		c.Error(models.NewBadRequest("invalid request body"))
 		return
 	}
 	user := storage.AddUser(req.Name, req.Email)
@@ -38,19 +38,22 @@ func GetUsers(c *gin.Context) {
 func UpdateUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.Response{Message: "invalid id"})
+		// c.JSON(http.StatusBadRequest, models.Response{Message: "invalid id"})
+		c.Error(models.NewBadRequest("invalid id"))
 		return
 	}
 
 	var req models.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, models.Response{Message: err.Error()})
+		// c.JSON(http.StatusBadRequest, models.Response{Message: err.Error()})
+		c.Error(models.NewBadRequest("invalid request body"))
 		return
 	}
 
 	user, ok := storage.UpdateUser(id, req.Name, req.Email)
 	if !ok {
-		c.JSON(http.StatusNotFound, models.Response{Message: "user not found"})
+		// c.JSON(http.StatusNotFound, models.Response{Message: "user not found"})
+		c.Error(models.NewNotFound("user not found"))
 		return
 	}
 	c.JSON(http.StatusOK, user)
@@ -59,12 +62,14 @@ func UpdateUser(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, models.Response{Message: "invalid id"})
+		// c.JSON(http.StatusBadRequest, models.Response{Message: "invalid id"})
+		c.Error(models.NewBadRequest("invalid id"))
 		return
 	}
 
 	if !storage.DeleteUser(id) {
-		c.JSON(http.StatusNotFound, models.Response{Message: "user not found"})
+		// c.JSON(http.StatusNotFound, models.Response{Message: "user not found"})
+		c.Error(models.NewNotFound("user not found"))
 	}
 
 	c.JSON(http.StatusOK, models.Response{Message: "user deleted"})

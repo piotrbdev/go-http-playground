@@ -14,6 +14,7 @@ func main() {
 
 	r.Use(middlewares.LogPathMiddleware)
 	r.Use(middlewares.AppNameMiddleware)
+	r.Use(middlewares.ErrorHandler())
 
 	api := r.Group("/api")
 
