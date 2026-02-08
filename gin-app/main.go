@@ -30,6 +30,8 @@ func main() {
 
 	private.POST("/users", handlers.CreateUser)
 	private.GET("/users", handlers.GetUsers)
+	private.PUT("/users/:id", handlers.UpdateUser)
+	private.DELETE("/users/:id", handlers.DeleteUser)
 
 	r.GET("/health", handlers.HealthCheck)
 	r.GET("/users/:name", handlers.GetUser)

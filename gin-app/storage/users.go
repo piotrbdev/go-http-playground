@@ -30,3 +30,30 @@ func GetUsers() []models.User {
 
 	return users
 }
+
+func UpdateUser(id int, name, email string) (models.User, bool) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	for i, u := range users {
+		if u.ID == id {
+			users[i].Name = name
+			users[i].Email = email
+			return users[i], true
+		}
+	}
+	return models.User{}, false
+}
+
+func DeleteUser(id int) bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	for i, u := range users {
+		if u.ID == id {
+			users = append(users[:i], users[i+1:]...)
+			return true
+		}
+	}
+	return false
+}
