@@ -5,53 +5,71 @@ import (
 	"sync"
 )
 
-var (
-	users  = make([]models.User, 0)
-	mutex  = sync.Mutex{}
-	nextID = 1
-)
+type MemoryStorage struct {
+	users  []models.User
+	mutex  sync.Mutex
+	nextID int
+}
 
-func AddUser(name, email string) models.User {
-	mutex.Lock()
-	defer mutex.Unlock()
+func NewMemoryStorage() *MemoryStorage {
+	return &MemoryStorage{
+		users:  make([]models.User, 0),
+		nextID: 1,
+	}
+}
+
+func (m *MemoryStorage) AddUser(name, email string) models.User {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	user := models.User{
-		ID:    nextID,
+		ID:    m.nextID,
 		Name:  name,
 		Email: email,
 	}
-	nextID++
-	users = append(users, user)
+	m.nextID++
+	m.users = append(m.users, user)
 	return user
 }
 
-func GetUsers() []models.User {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	return users
-}
-
-func UpdateUser(id int, name, email string) (models.User, bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	for i, u := range users {
+func (m *MemoryStorage) GetUser(id int) (models.User, bool) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	for i, u := range m.users {
 		if u.ID == id {
-			users[i].Name = name
-			users[i].Email = email
-			return users[i], true
+			return m.users[i], true
 		}
 	}
 	return models.User{}, false
 }
 
-func DeleteUser(id int) bool {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (m *MemoryStorage) GetUsers() []models.User {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
-	for i, u := range users {
+	return m.users
+}
+
+func (m *MemoryStorage) UpdateUser(id int, name, email string) (models.User, bool) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for i, u := range m.users {
 		if u.ID == id {
-			users = append(users[:i], users[i+1:]...)
+			m.users[i].Name = name
+			m.users[i].Email = email
+			return m.users[i], true
+		}
+	}
+	return models.User{}, false
+}
+
+func (m *MemoryStorage) DeleteUser(id int) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for i, u := range m.users {
+		if u.ID == id {
+			m.users = append(m.users[:i], m.users[i+1:]...)
 			return true
 		}
 	}
