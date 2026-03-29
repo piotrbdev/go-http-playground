@@ -90,6 +90,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 	if !h.store.DeleteUser(id) {
 		c.Error(models.NewNotFound("user not found"))
+		return
 	}
 
 	c.JSON(http.StatusOK, models.Response{Message: "user deleted"})
