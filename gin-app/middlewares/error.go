@@ -21,6 +21,7 @@ func ErrorHandler() gin.HandlerFunc {
 			c.JSON(apiErr.Status, models.Response{
 				Message: apiErr.Message,
 			})
+			c.Abort()
 			return
 		}
 

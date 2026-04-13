@@ -19,7 +19,7 @@ func NewUserHandler(store storage.UserStore) *UserHandler {
 	}
 }
 
-func (h *UserHandler) GetUser(c *gin.Context) {
+func (h *UserHandler) GetUserByName(c *gin.Context) {
 	name := c.Param("name")
 
 	if name == "" {
@@ -30,15 +30,15 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, models.Response{Message: "User " + name})
 }
 
-func (h *UserHandler) GetUserByID(c *gin.Context) {
+func (h *UserHandler) GetUser(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.Error(models.NewBadRequest("invalid id"))
 		return
 	}
 
-	user, ok := h.store.GetUser(id)
-	if !ok {
+	user, err := h.store.GetUser(id)
+	if err != nil {
 		c.Error(models.NewNotFound("user not found"))
 		return
 	}
@@ -51,12 +51,20 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		c.Error(models.NewBadRequest("invalid request body"))
 		return
 	}
-	user := h.store.AddUser(req.Name, req.Email)
+	user, err := h.store.AddUser(req.Name, req.Email)
+	if err != nil {
+		c.Error(models.NewBadRequest(err.Error()))
+		return
+	}
 	c.JSON(http.StatusCreated, user)
 }
 
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	users := h.store.GetUsers()
+	users, err := h.store.GetUsers()
+	if err != nil {
+		c.Error(models.NewBadRequest("something went wrong"))
+		return
+	}
 	c.JSON(http.StatusOK, users)
 }
 
@@ -73,8 +81,8 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, ok := h.store.UpdateUser(id, req.Name, req.Email)
-	if !ok {
+	user, err := h.store.UpdateUser(id, req.Name, req.Email)
+	if err != nil {
 		c.Error(models.NewNotFound("user not found"))
 		return
 	}
@@ -87,8 +95,8 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		c.Error(models.NewBadRequest("invalid id"))
 		return
 	}
-
-	if !h.store.DeleteUser(id) {
+	err2 := h.store.DeleteUser(id)
+	if err2 != nil {
 		c.Error(models.NewNotFound("user not found"))
 		return
 	}

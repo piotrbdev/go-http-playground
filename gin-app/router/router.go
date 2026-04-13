@@ -25,18 +25,18 @@ func SetupRouter(userHandler *handlers.UserHandler) *gin.Engine {
 	})
 
 	private := api.Group("/private")
-	private.Use(middlewares.AuthMiddleware)
+	// private.Use(middlewares.AuthMiddleware)
 	private.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, models.Response{Message: "private pong"})
 	})
-
-	private.POST("/users", userHandler.CreateUser)
-	private.GET("/users", userHandler.GetUsers)
-	private.GET("/users/:id", userHandler.GetUserByID)
-	private.PUT("/users/:id", userHandler.UpdateUser)
-	private.DELETE("/users/:id", userHandler.DeleteUser)
+	private_users := private.Group("/users")
+	private_users.POST("", userHandler.CreateUser)
+	private_users.GET("", userHandler.GetUsers)
+	private_users.GET("/:id", userHandler.GetUser)
+	private_users.PUT("/:id", userHandler.UpdateUser)
+	private_users.DELETE("/:id", userHandler.DeleteUser)
 
 	r.GET("/health", handlers.HealthCheck)
-	r.GET("/users/:name", userHandler.GetUser)
+	r.GET("/users/:name", userHandler.GetUserByName)
 	return r
 }

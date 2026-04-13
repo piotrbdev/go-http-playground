@@ -18,7 +18,7 @@ func NewMemoryStorage() *MemoryStorage {
 	}
 }
 
-func (m *MemoryStorage) AddUser(name, email string) models.User {
+func (m *MemoryStorage) AddUser(name, email string) (models.User, error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	user := models.User{
@@ -28,7 +28,7 @@ func (m *MemoryStorage) AddUser(name, email string) models.User {
 	}
 	m.nextID++
 	m.users = append(m.users, user)
-	return user
+	return user, nil
 }
 
 func (m *MemoryStorage) GetUser(id int) (models.User, bool) {

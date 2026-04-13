@@ -3,9 +3,10 @@ package storage
 import "gin-app/models"
 
 type UserStore interface {
-	AddUser(name, email string) models.User
-	GetUser(id int) (models.User, bool)
-	GetUsers() []models.User
-	UpdateUser(id int, name, email string) (models.User, bool)
-	DeleteUser(id int) bool
+	// AddUser(name, email string) models.User
+	AddUser(name, email string) (models.User, error)
+	GetUser(id int) (models.User, error)
+	GetUsers() ([]models.User, error)
+	UpdateUser(id int, name, email string) (models.User, error)
+	DeleteUser(id int) error
 }
