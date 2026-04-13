@@ -5,9 +5,12 @@ import (
 	"gin-app/handlers"
 	"gin-app/router"
 	"gin-app/storage"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	db, err := storage.NewPostgresDB()
 	if err != nil {
 		panic(err)
