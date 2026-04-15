@@ -3,7 +3,6 @@ package storage
 import "gin-app/models"
 
 type UserStore interface {
-	// AddUser(name, email string) models.User
 	AddUser(name, email string) (models.User, error)
 	GetUser(id int) (models.User, error)
 	GetUsers() ([]models.User, error)

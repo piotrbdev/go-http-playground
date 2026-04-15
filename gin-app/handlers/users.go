@@ -5,6 +5,7 @@ import (
 	"gin-app/storage"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -53,6 +54,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	}
 	user, err := h.store.AddUser(req.Name, req.Email)
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			c.Error(models.NewBadRequest("email already exists"))
+			return
+		}
 		c.Error(models.NewBadRequest(err.Error()))
 		return
 	}

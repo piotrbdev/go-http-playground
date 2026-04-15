@@ -11,18 +11,20 @@ import (
 
 func main() {
 	godotenv.Load()
-	db, err := storage.NewPostgresDB()
+	// db, err := storage.NewPostgresDB()
+	db, err := storage.NewGormDB()
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
+	// defer db.Close()
 
-	err = storage.CreateUserTable(db)
-	if err != nil {
-		panic(err)
-	}
+	// err = storage.CreateUserTable(db)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	store := storage.NewPostgresStorage(db)
+	// store := storage.NewPostgresStorage(db)
+	store := storage.NewGormStorage(db)
 
 	users, err := store.GetUsers()
 	if err != nil {

@@ -10,8 +10,14 @@ type UpdateUserRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
+// type User struct {
+// 	ID    int    `json:"id"`
+// 	Name  string `json:"name"`
+// 	Email string `json:"email"`
+// }
+
 type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	ID    int    `gorm:"primaryKey"`
+	Name  string `gorm:"not null"`
+	Email string `gorm:"unique;not null"`
 }
