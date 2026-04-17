@@ -5,9 +5,10 @@ import (
 	"gin-app/storage"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 type UserHandler struct {
@@ -54,9 +55,12 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	}
 	user, err := h.store.AddUser(req.Name, req.Email)
 	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			c.Error(models.NewBadRequest("email already exists"))
-			return
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code == "23505" {
+
+				c.Error(models.NewBadRequest("email already exists"))
+				return
+			}
 		}
 		c.Error(models.NewBadRequest(err.Error()))
 		return

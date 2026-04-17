@@ -3,10 +3,13 @@ package storage
 import (
 	"fmt"
 	"gin-app/models"
+	"log"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func NewGormDB() (*gorm.DB, error) {
@@ -18,13 +21,22 @@ func NewGormDB() (*gorm.DB, error) {
 		os.Getenv("DB_NAME"),
 		os.Getenv("DB_PORT"),
 	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Info,
+			Colorful:      true,
+		},
+	)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println("Connected to postgres (gorm)")
 
-	// auto migrate
 	err = db.AutoMigrate(&models.User{})
 	if err != nil {
 		return nil, err
