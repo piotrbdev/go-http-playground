@@ -69,10 +69,13 @@ func (g *GormStorage) GetUser(id int) (models.User, error) {
 	return user, err
 }
 
-func (g *GormStorage) GetUsers() ([]models.User, error) {
+func (g *GormStorage) GetUsers(limit, offset int) ([]models.User, error) {
 	var users []models.User
 
-	err := g.db.Find(&users).Error
+	err := g.db.
+		Limit(limit).
+		Offset(offset).
+		Find(&users).Error
 	return users, err
 }
 

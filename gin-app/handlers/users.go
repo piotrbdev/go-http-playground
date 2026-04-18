@@ -69,9 +69,27 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUsers(c *gin.Context) {
-	users, err := h.store.GetUsers()
+	pageStr := c.Query("page")
+	limitStr := c.Query("limit")
+
+	page := 1
+	limit := 10
+
+	if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+		page = p
+	}
+
+	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+		limit = l
+	}
+
+	offset := (page - 1) * limit
+
+	users, err := h.store.GetUsers(limit, offset)
 	if err != nil {
-		c.Error(models.NewBadRequest("something went wrong"))
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Message: "database error",
+		})
 		return
 	}
 	c.JSON(http.StatusOK, users)

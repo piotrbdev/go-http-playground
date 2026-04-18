@@ -26,7 +26,7 @@ func main() {
 	// store := storage.NewPostgresStorage(db)
 	store := storage.NewGormStorage(db)
 
-	users, err := store.GetUsers()
+	users, err := store.GetUsers(1, 10)
 	if err != nil {
 		panic(err)
 	}
