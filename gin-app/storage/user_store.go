@@ -8,4 +8,5 @@ type UserStore interface {
 	GetUsers(limit, offset int) ([]models.User, error)
 	UpdateUser(id int, name, email string) (models.User, error)
 	DeleteUser(id int) error
+	CountUsers() (int64, error)
 }

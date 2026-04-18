@@ -95,3 +95,9 @@ func (g *GormStorage) UpdateUser(id int, name, email string) (models.User, error
 func (g *GormStorage) DeleteUser(id int) error {
 	return g.db.Delete(&models.User{}, id).Error
 }
+
+func (g *GormStorage) CountUsers() (int64, error) {
+	var count int64
+	err := g.db.Model(&models.User{}).Count(&count).Error
+	return count, err
+}

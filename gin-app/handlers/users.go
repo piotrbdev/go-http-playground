@@ -92,7 +92,21 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	total, err := h.store.CountUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, models.Response{
+			Message: "database error",
+		})
+		return
+	}
+	response := models.PaginatedUsersResponse{
+		Data:  users,
+		Page:  page,
+		Limit: limit,
+		Total: int(total),
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
