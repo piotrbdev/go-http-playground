@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"gin-app/handlers"
+	"gin-app/middlewares"
 	"gin-app/router"
 	"gin-app/storage"
 
@@ -11,28 +11,21 @@ import (
 
 func main() {
 	godotenv.Load()
-	// db, err := storage.NewPostgresDB()
 	db, err := storage.NewGormDB()
 	if err != nil {
 		panic(err)
 	}
-	// defer db.Close()
 
-	// err = storage.CreateUserTable(db)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// store := storage.NewPostgresStorage(db)
-	store := storage.NewGormStorage(db)
-
-	users, err := store.GetUsers(1, 10)
+	err = middlewares.InitJWKS()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(users)
 
-	userHandler := handlers.NewUserHandler(store)
-	r := router.SetupRouter(userHandler)
+	todosStore := storage.NewTodosGormStorage(db)
+	usersStore := storage.NewUserGormStorage(db)
+
+	todoHandler := handlers.NewTodoHandler(todosStore)
+	userHandler := handlers.NewUserHandler(usersStore)
+	r := router.SetupRouter(userHandler, todoHandler)
 	r.Run(":8080")
 }

@@ -1,77 +1,113 @@
 package storage
 
 import (
+	"errors"
 	"gin-app/models"
-	"sync"
+
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
-type MemoryStorage struct {
-	users  []models.User
-	mutex  sync.Mutex
-	nextID int
+type UserGormStorage struct {
+	db *gorm.DB
 }
 
-func NewMemoryStorage() *MemoryStorage {
-	return &MemoryStorage{
-		users:  make([]models.User, 0),
-		nextID: 1,
+func NewUserGormStorage(db *gorm.DB) *UserGormStorage {
+	return &UserGormStorage{db: db}
+}
+
+func (g *UserGormStorage) IsEmailAvailable(email string) bool {
+	var user models.User
+	g.db.Where("email=?", email).First(&user)
+
+	return user.ID == 0
+}
+
+func (g *UserGormStorage) MatchUserPassword(email, password string) (*models.User, error) {
+	var user models.User
+	err := g.db.Where("email=?", email).First(&user).Error
+	if err != nil {
+		return nil, errors.New("invalid email or password")
 	}
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return nil, errors.New("invalid email or password")
+	}
+
+	user.Password = ""
+
+	return &user, nil
 }
 
-func (m *MemoryStorage) AddUser(name, email string) (models.User, error) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (g *UserGormStorage) AddUser(name, email, password string) (models.User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		// c.Error(models.NewBadRequest("Password is too long"))
+		return models.User{}, err
+	}
 	user := models.User{
-		ID:    m.nextID,
-		Name:  name,
-		Email: email,
+		Name:     name,
+		Email:    email,
+		Password: string(hashedPassword),
 	}
-	m.nextID++
-	m.users = append(m.users, user)
-	return user, nil
+
+	err = g.db.Create(&user).Error
+	return user, err
 }
 
-func (m *MemoryStorage) GetUser(id int) (models.User, bool) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	for i, u := range m.users {
-		if u.ID == id {
-			return m.users[i], true
-		}
+func (g *UserGormStorage) GetUsers(limit, offset int, filters map[string]string) ([]models.UserResponse, error) {
+	var users []models.UserResponse
+	query := g.db.Model(&models.User{})
+
+	if email, ok := filters["email"]; ok {
+		query = query.Where("email=?", email)
 	}
-	return models.User{}, false
+	if name, ok := filters["name"]; ok {
+		query = query.Where("name=?", name)
+	}
+
+	err := query.
+		Limit(limit).
+		Offset(offset).
+		Find(&users).Error
+	return users, err
 }
 
-func (m *MemoryStorage) GetUsers() []models.User {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (g *UserGormStorage) UpdateUser(id int, name, email string) (models.User, error) {
+	var user models.User
 
-	return m.users
+	err := g.db.First(&user, id).Error
+	if err != nil {
+		return user, err
+	}
+	user.Name = name
+	user.Email = email
+	err = g.db.Save(&user).Error
+	return user, err
 }
 
-func (m *MemoryStorage) UpdateUser(id int, name, email string) (models.User, bool) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	for i, u := range m.users {
-		if u.ID == id {
-			m.users[i].Name = name
-			m.users[i].Email = email
-			return m.users[i], true
-		}
-	}
-	return models.User{}, false
+func (g *UserGormStorage) DeleteUser(id int) error {
+	return g.db.Delete(&models.User{}, id).Error
 }
 
-func (m *MemoryStorage) DeleteUser(id int) bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+func (g *UserGormStorage) CountUsers(filters map[string]string) (int64, error) {
+	var count int64
+	query := g.db.Model(&models.User{})
 
-	for i, u := range m.users {
-		if u.ID == id {
-			m.users = append(m.users[:i], m.users[i+1:]...)
-			return true
-		}
+	if email, ok := filters["email"]; ok {
+		query = query.Where("email=?", email)
 	}
-	return false
+	if name, ok := filters["name"]; ok {
+		query = query.Where("name=?", name)
+	}
+
+	err := query.Count(&count).Error
+	return count, err
+}
+
+func (g *UserGormStorage) GetUser(id int) (models.User, error) {
+	var user models.User
+
+	err := g.db.First(&user, id).Error
+	return user, err
 }

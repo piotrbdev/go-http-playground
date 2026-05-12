@@ -5,9 +5,13 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
+type TokenResponse struct {
+	Token string `json:"token"`
+}
+
 type PaginatedUsersResponse struct {
-	Data  []User `json:"data"`
-	Page  int    `json:"page"`
-	Limit int    `json:"limit"`
-	Total int    `json:"total"`
+	Data  []UserResponse `json:"data"`
+	Page  int            `json:"page"`
+	Limit int            `json:"limit"`
+	Total int            `json:"total"`
 }

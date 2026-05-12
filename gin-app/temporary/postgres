@@ -1,5 +1,7 @@
 package storage
 
+// used before gorm to understand how it works
+
 import (
 	"database/sql"
 	"errors"
@@ -70,7 +72,7 @@ func (p *PostgresStorage) AddUser(name, email string) (models.User, error) {
 	return u, nil
 }
 
-// TODO: these errors are too broad
+// TODO: these errors are too broad but we won't be using sql for queries, we will use gorm instead
 func (p *PostgresStorage) GetUser(id int) (models.User, error) {
 	// var name, email string
 	var u models.User

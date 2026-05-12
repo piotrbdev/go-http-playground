@@ -22,3 +22,11 @@ func NewNotFound(msg string) *ApiError {
 func NewUnauthorized(msg string) *ApiError {
 	return &ApiError{Status: http.StatusUnauthorized, Message: msg}
 }
+
+func NewConflict(msg string) *ApiError {
+	return &ApiError{Status: http.StatusConflict, Message: msg}
+}
+
+func NewInternal(msg string) *ApiError {
+	return &ApiError{Status: http.StatusInternalServerError, Message: msg}
+}
